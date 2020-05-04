@@ -1,34 +1,42 @@
+
 import React from 'react';
-import { render } from '@testing-library/react';
-import { shallow, mount }from 'enzyme';
+import { mount } from 'enzyme';
+
 import { findByTestAttr, checkProps } from '../test/testUtils';
 import Input from './Input';
-
 import languageContext from './contexts/languageContext';
-/*
-Setup function for app component
-`return {ShallowWrapper}`
+import successContext from './contexts/successContext';
+import guessedWordsContext from './contexts/guessedWordsContext';
 
+/**
+* Create ReactWrapper for Input component for testing
+* @param {object} testValues - Context and props values for this specific test.
+* @returns {ReactWrapper} - Wrapper for Input component and providers
 */
-const setup = ({ language, secretWord }) => {
+const setup = ({ language, secretWord, success }) => {
   language = language || "en";
   secretWord = secretWord || "party";
+  success = success || false;
 
   return mount(
     <languageContext.Provider value={language} >
+      <successContext.SuccessProvider value={[success, jest.fn()]}>
+        <guessedWordsContext.GuessedWordsProvider>
           <Input secretWord={secretWord} />
+        </guessedWordsContext.GuessedWordsProvider>
+      </successContext.SuccessProvider>
     </languageContext.Provider>
   );
 }
 
-test('App renders without error', () => {
+test('Input renders without error', () => {
   const wrapper = setup({});
   const inputComponent = findByTestAttr(wrapper, 'component-input');
   expect(inputComponent.length).toBe(1);
 });
 
-test('App renders without error', () => {
-  checkProps(Input, {secretWord: 'party'});
+test('does not throw warning with expected props', () => {
+  checkProps(Input, { secretWord: "party" });
 });
 
 describe('state controlled input field', () => {
@@ -67,4 +75,9 @@ describe('languagePicker', () => {
     const submitButton = findByTestAttr(wrapper, 'submit-button');
     expect(submitButton.text()).toBe('🚀');
   });
+});
+
+test('input component does not show when success is true', () => {
+  const wrapper = setup({ secretWord: "party", success: true });
+  expect(wrapper.isEmptyRender()).toBe(true);
 });
